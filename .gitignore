@@ -1,0 +1,6 @@
+.vscode
+Data.xlsx
+Data-Origin.xlsx
+__pycache__/
+*.pyc
+.idea/
