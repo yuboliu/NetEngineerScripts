@@ -40,10 +40,9 @@ def log():
 def walk_file(base):
     global DeviceName, DeviceVendor
     for root, dirs, files in os.walk(base):
-        for d in dirs:
-            DeviceVendor = d
         for f in files:
             DeviceName = f
+            DeviceVendor = root.strip("..\\data\\")
             yield os.path.join(root, f)
 
 

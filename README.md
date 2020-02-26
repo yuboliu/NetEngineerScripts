@@ -20,3 +20,5 @@ NAS.py 通过读取Excel行数据通过ISE API添加 NAS
 Backup.py 通过读取Excel行数据登录设备进行配置备份至FTP服务器
 ### CompareConfig/main.py
 CompareConfig/main.py 通过比对配置文件中的配置来确定网络设备是否开启了某项功能，例如交换机接口是否开启了Dot1x
+### CombingConfig/Combind.py
+CombingConfig/Combing.py 通过读取设备配置文件来梳理出设备接口所对应的 description 信息，写入到Excel中。
