@@ -88,7 +88,6 @@ def write_to_excel(d):
         worksheet.write(row, col, key)
         worksheet.write(row, col+1, d[key])
         row += 1
-    print("123")
 
 
 if __name__ == "__main__":
