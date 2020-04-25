@@ -14,27 +14,16 @@ import logging
 # import openpyxl
 import pysnooper
 sys.path.append(os.path.abspath("../"))
-import lib.ConfigSettings
-BaseDir = lib.ConfigSettings.BaseDir
-Cisco = lib.ConfigSettings.Cisco
-CiscoGlobalCmd = lib.ConfigSettings.CiscoGlobalCmd
+sys.path.append(os.path.abspath("../../"))
+from CommonLib import log as log
+import lib.CompareConfigSettings
+BaseDir = lib.CompareConfigSettings.BaseDir
+Cisco = lib.CompareConfigSettings.Cisco
+CiscoGlobalCmd = lib.CompareConfigSettings.CiscoGlobalCmd
 today = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
 DeviceName = ""
 DeviceVendor = ""
 GlobalErrorMessage = "Globally disable Dot1x"
-
-
-def log():
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    fh = logging.FileHandler('..\\log\\{0}.log'.format(today))
-    ch = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-    return logger
 
 
 def walk_file(base):

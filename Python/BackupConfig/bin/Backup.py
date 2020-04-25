@@ -12,6 +12,7 @@ import json
 
 sys.path.append(os.path.abspath("../"))
 import lib.BackupConfigSettings
+from CommonLib import log as log
 XLSX_Path = lib.BackupConfigSettings.XLSX_Path
 DataDict = lib.BackupConfigSettings.DataDict
 Global_ErrorMess = lib.BackupConfigSettings.Global_ErrorMess
@@ -26,22 +27,6 @@ run_cmd_dict = lib.BackupConfigSettings.run_cmd_dict
 H3C_Cv7 = lib.BackupConfigSettings.H3C_Cv7
 
 today = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-
-
-def log(level):
-    import logging
-    go_level = {"info": logging.INFO, "error": logging.ERROR, "debug": logging.DEBUG, "warning": logging.WARNING,
-                "critical": logging.CRITICAL}
-    logger = logging.getLogger()
-    logger.setLevel(go_level[level])
-    fh = logging.FileHandler('..\\log\\{0}.log'.format(today))
-    ch = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-    return logger
 
 
 def common_ssh(ssh):

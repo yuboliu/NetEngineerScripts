@@ -12,30 +12,15 @@ import json
 import datetime
 # import openpyxl
 sys.path.append(os.path.abspath("../"))
-import lib.ConfigSettings
+import lib.CombingConfigSettings
+from CommonLib import log
 
 today = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-BaseDir = lib.ConfigSettings.BaseDir
-Cisco = lib.ConfigSettings.Cisco
-CiscoGlobalCmd = lib.ConfigSettings.CiscoGlobalCmd
+BaseDir = lib.CombingConfigSettings.BaseDir
+Cisco = lib.CombingConfigSettings.Cisco
+CiscoGlobalCmd = lib.CombingConfigSettings.CiscoGlobalCmd
 DeviceName = ""
 DeviceVendor = ""
-
-
-def log(level):
-    import logging
-    go_level = {"info": logging.INFO, "error": logging.ERROR, "debug": logging.DEBUG, "warning": logging.WARNING,
-                "critical": logging.CRITICAL}
-    logger = logging.getLogger()
-    logger.setLevel(go_level[level])
-    fh = logging.FileHandler('..\\log\\{0}.log'.format(today))
-    ch = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-    return logger
 
 
 def walk_file(base):

@@ -18,7 +18,7 @@ ftp {0} source ip {5}
 {1}
 {2}
 ascii
-put startup.cfg {4}/{3}
+put startup.cfg {4}/H3C/{3}
 quit
 quit
 '''
