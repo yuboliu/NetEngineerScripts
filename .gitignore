@@ -3,6 +3,7 @@ Data.xlsx
 Data-Origin.xlsx
 __pycache__/
 *.pyc
+*.log
 .idea/
 Result.xlsx
 Python/GoFirewall/data/FirewalllPolicy.xlsx

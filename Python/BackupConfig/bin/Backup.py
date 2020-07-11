@@ -9,10 +9,13 @@ import openpyxl
 import datetime
 import paramiko
 import json
+from multiprocessing import Pool
+import time
 
 sys.path.append(os.path.abspath("../"))
 import lib.BackupConfigSettings
 from CommonLib import log as log
+
 XLSX_Path = lib.BackupConfigSettings.XLSX_Path
 DataDict = lib.BackupConfigSettings.DataDict
 Global_ErrorMess = lib.BackupConfigSettings.Global_ErrorMess
@@ -29,19 +32,21 @@ H3C_Cv7 = lib.BackupConfigSettings.H3C_Cv7
 today = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
 
 
-def common_ssh(ssh):
+def common_ssh(DataDict):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
         ssh.connect(hostname=DataDict['地址'], port=22, username=DataDict['用户名'], password=DataDict['密码'],
                     look_for_keys=False, timeout=3)
     except Exception as r:
-        logger.error("设备名称: {0} 设备地址: {1} 错误: {2}".format(DataDict['设备名称'], DataDict['地址'], r))
+        raise "设备名称: {0} 设备地址: {1} 错误: {2}".format(DataDict['设备名称'], DataDict['地址'], r)
     else:
         if DataDict['设备厂商'] == "H3C-v7":
             stdin, stdout, stderr = ssh.exec_command(
                 H3C_Cv7.format(FtpServerUsername, FtpServerPassword, FtpServerIP, DataDict['设备名称'], today))
             b_result = stdout.read()
             r = bytes.decode(b_result)
-            logger.debug(r)
+            return r
         else:
             channel = ssh.invoke_shell(height=999)
             stdin = channel.makefile('wb')
@@ -51,7 +56,7 @@ def common_ssh(ssh):
                 run_cmd_dict[run_cmd].format(FtpServerIP, FtpServerUsername, FtpServerPassword, DataDict['设备名称'], today,
                                              DataDict['地址'], DataDict['Enable密码']))
             r = stdout.read().decode('gbk')
-            logger.debug(r)
+            return r
     finally:
         ssh.close()
 
@@ -70,13 +75,46 @@ def make_dir(wb_sheet, max_column, max_row):
         os.makedirs(("{}\\{}\\{}".format(FtpServerRoot, today, i)))
 
 
-def core(max_row, max_column, wb_sheet, ssh):
+def gen_data(max_row, max_column, wb_sheet):
+    data_list=[]
     for i in range(1, max_column + 1):
         DataDict.setdefault(wb_sheet.cell(1, i).value)
     for i in range(2, max_row + 1):
         for j in range(1, max_column + 1):
             DataDict[wb_sheet.cell(1, j).value] = wb_sheet.cell(i, j).value
-        common_ssh(ssh)
+        data_list.append(DataDict.copy())
+    # logger.info(data_list)
+    iter_datalist = iter(data_list)
+    return iter_datalist
+
+
+def test_fun():
+    import random
+    r = random.randint(1, 5)
+    time.sleep(r)
+    return r, __name__
+
+
+def process_go(iter_datalist):
+    exit_flag = False
+    results = []
+    p_pool = Pool(8)
+    while True:
+        for k in range(8):
+            try:
+                data = next(iter_datalist)
+            except StopIteration:
+                exit_flag = True
+                break
+            # res = p_pool.apply_async(common_ssh, args=(data,))
+            res = p_pool.apply_async(test_fun)
+            results.append(res)
+        if exit_flag:
+            break
+    p_pool.close()
+    p_pool.join()
+    for result in results:
+        print(result.get())
 
 
 def main(sheet_name):
@@ -85,10 +123,9 @@ def main(sheet_name):
     wb_sheet = wb[sheet_name]
     max_column = wb_sheet.max_column
     max_row = wb_sheet.max_row
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    make_dir(wb_sheet, max_column, max_row)
-    core(max_row, max_column, wb_sheet, ssh)
+    # make_dir(wb_sheet, max_column, max_row)
+    gened_date = gen_data(max_row, max_column, wb_sheet)
+    process_go(gened_date)
     wb.close()
 
 

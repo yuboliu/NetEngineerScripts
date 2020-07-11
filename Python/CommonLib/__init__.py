@@ -12,11 +12,14 @@ import logging
 sys.path.append(os.path.abspath("../"))
 
 
-def log():
+def log(level):
+    import logging
     import datetime
     today = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    go_level = {"info": logging.INFO, "error": logging.ERROR, "debug": logging.DEBUG, "warning": logging.WARNING,
+                "critical": logging.CRITICAL}
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(go_level[level])
     fh = logging.FileHandler('..\\log\\{0}.log'.format(today))
     ch = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s')
