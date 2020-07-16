@@ -11,8 +11,10 @@ import paramiko
 import json
 from multiprocessing import Pool
 import time
+from ftplib import FTP
 
 sys.path.append(os.path.abspath("../"))
+sys.path.append(os.path.abspath("../../"))
 import lib.BackupConfigSettings
 from CommonLib import log as log
 
@@ -32,6 +34,13 @@ H3C_Cv7 = lib.BackupConfigSettings.H3C_Cv7
 today = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
 
 
+def test_fun():
+    import random
+    r = random.randint(1, 5)
+    time.sleep(r)
+    return r, __name__
+
+
 def common_ssh(DataDict):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -46,7 +55,9 @@ def common_ssh(DataDict):
                 H3C_Cv7.format(FtpServerUsername, FtpServerPassword, FtpServerIP, DataDict['设备名称'], today))
             b_result = stdout.read()
             r = bytes.decode(b_result)
+            print("设备名称: {0} 设备地址: {1}".format(DataDict['设备名称'], DataDict['地址']))
             return r
+
         else:
             channel = ssh.invoke_shell(height=999)
             stdin = channel.makefile('wb')
@@ -56,6 +67,7 @@ def common_ssh(DataDict):
                 run_cmd_dict[run_cmd].format(FtpServerIP, FtpServerUsername, FtpServerPassword, DataDict['设备名称'], today,
                                              DataDict['地址'], DataDict['Enable密码']))
             r = stdout.read().decode('gbk')
+            print("设备名称: {0} 设备地址: {1}".format(DataDict['设备名称'], DataDict['地址']))
             return r
     finally:
         ssh.close()
@@ -70,9 +82,27 @@ def make_dir(wb_sheet, max_column, max_row):
     for i in range(2, max_row + 1):
         all_device_vendor.append(wb_sheet.cell(i, DeviceVendor_ColNum).value)
     all_device_vendor = set(all_device_vendor)
-    all_device_vendor.discard("H3C-v7")
+    for n, i in enumerate(all_device_vendor):
+        if i == "H3C-v7":
+            all_device_vendor[n] = "H3C"
+    # all_device_vendor.discard("H3C-v7")
+    logger.info(all_device_vendor)
     for i in all_device_vendor:
         os.makedirs(("{}\\{}\\{}".format(FtpServerRoot, today, i)))
+
+
+def ftp_up(filename):
+    ftp = FTP()
+    ftp.set_debuglevel(2)
+    ftp.connect(FtpServerIP)
+    ftp.login(FtpServerUsername, FtpServerPassword)
+    print(ftp.getwelcome())
+    # ftp.cwd('{0}\\{1}'.format(FtpServerRoot, today))
+    ftp.cwd(today)
+    ftp.mkd(filename)
+    ftp.set_debuglevel(0)
+    ftp.quit()
+    logger.info("ftp up test ok")
 
 
 def gen_data(max_row, max_column, wb_sheet):
@@ -83,16 +113,9 @@ def gen_data(max_row, max_column, wb_sheet):
         for j in range(1, max_column + 1):
             DataDict[wb_sheet.cell(1, j).value] = wb_sheet.cell(i, j).value
         data_list.append(DataDict.copy())
-    # logger.info(data_list)
+    logger.info(data_list)
     iter_datalist = iter(data_list)
     return iter_datalist
-
-
-def test_fun():
-    import random
-    r = random.randint(1, 5)
-    time.sleep(r)
-    return r, __name__
 
 
 def process_go(iter_datalist):
@@ -106,15 +129,17 @@ def process_go(iter_datalist):
             except StopIteration:
                 exit_flag = True
                 break
-            # res = p_pool.apply_async(common_ssh, args=(data,))
-            res = p_pool.apply_async(test_fun)
+            logger.info(data)
+            res = p_pool.apply_async(common_ssh, args=(data,))
+            # res = p_pool.apply_async(test_fun)
             results.append(res)
         if exit_flag:
             break
     p_pool.close()
     p_pool.join()
     for result in results:
-        print(result.get())
+        # print(result.get())
+        logger.info(result.get())
 
 
 def main(sheet_name):
@@ -123,9 +148,10 @@ def main(sheet_name):
     wb_sheet = wb[sheet_name]
     max_column = wb_sheet.max_column
     max_row = wb_sheet.max_row
-    # make_dir(wb_sheet, max_column, max_row)
-    gened_date = gen_data(max_row, max_column, wb_sheet)
-    process_go(gened_date)
+    make_dir(wb_sheet, max_column, max_row)
+    ftp_up('TestDir')
+    gen_date = gen_data(max_row, max_column, wb_sheet)
+    process_go(gen_date)
     wb.close()
 
 
