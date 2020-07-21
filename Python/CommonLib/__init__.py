@@ -30,5 +30,12 @@ def log(level):
     return logger
 
 
+def test_fun():
+    import random
+    r = random.randint(1, 5)
+    time.sleep(r)
+    return r, __name__
+
+
 if __name__ == "__main__":
     pass

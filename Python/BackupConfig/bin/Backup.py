@@ -8,7 +8,6 @@ import os
 import openpyxl
 import datetime
 import paramiko
-import json
 from multiprocessing import Pool
 import time
 from ftplib import FTP
@@ -48,7 +47,8 @@ def common_ssh(DataDict):
         ssh.connect(hostname=DataDict['地址'], port=22, username=DataDict['用户名'], password=DataDict['密码'],
                     look_for_keys=False, timeout=3)
     except Exception as r:
-        raise "设备名称: {0} 设备地址: {1} 错误: {2}".format(DataDict['设备名称'], DataDict['地址'], r)
+        tips_r = "设备名称: {0} 设备地址: {1} 错误: {2}".format(DataDict['设备名称'], DataDict['地址'], r)
+        raise Exception(tips_r)
     else:
         if DataDict['设备厂商'] == "H3C-v7":
             stdin, stdout, stderr = ssh.exec_command(
@@ -56,7 +56,8 @@ def common_ssh(DataDict):
             b_result = stdout.read()
             r = bytes.decode(b_result)
             print("设备名称: {0} 设备地址: {1}".format(DataDict['设备名称'], DataDict['地址']))
-            return r
+            # return r
+            print(r)
 
         else:
             channel = ssh.invoke_shell(height=999)
@@ -68,7 +69,8 @@ def common_ssh(DataDict):
                                              DataDict['地址'], DataDict['Enable密码']))
             r = stdout.read().decode('gbk')
             print("设备名称: {0} 设备地址: {1}".format(DataDict['设备名称'], DataDict['地址']))
-            return r
+            # return r
+            print(r)
     finally:
         ssh.close()
 
@@ -96,7 +98,7 @@ def ftp_up(filename):
     ftp.set_debuglevel(2)
     ftp.connect(FtpServerIP)
     ftp.login(FtpServerUsername, FtpServerPassword)
-    print(ftp.getwelcome())
+    logger.info(ftp.getwelcome())
     # ftp.cwd('{0}\\{1}'.format(FtpServerRoot, today))
     ftp.cwd(today)
     ftp.mkd(filename)
@@ -106,7 +108,7 @@ def ftp_up(filename):
 
 
 def gen_data(max_row, max_column, wb_sheet):
-    data_list=[]
+    data_list = []
     for i in range(1, max_column + 1):
         DataDict.setdefault(wb_sheet.cell(1, i).value)
     for i in range(2, max_row + 1):
@@ -119,27 +121,27 @@ def gen_data(max_row, max_column, wb_sheet):
 
 
 def process_go(iter_datalist):
-    exit_flag = False
-    results = []
-    p_pool = Pool(8)
-    while True:
-        for k in range(8):
-            try:
-                data = next(iter_datalist)
-            except StopIteration:
-                exit_flag = True
-                break
-            logger.info(data)
-            res = p_pool.apply_async(common_ssh, args=(data,))
-            # res = p_pool.apply_async(test_fun)
-            results.append(res)
-        if exit_flag:
-            break
+    # results = []
+    # p_pool = Pool(processes=4)
+    # while True:
+    #     try:
+    #         data = next(iter_datalist)
+    #     except StopIteration:
+    #         # exit_flag = True
+    #         break
+    #     logger.info(data)
+    #     res = p_pool.apply_async(common_ssh, args=(data,))
+    #     # res = p_pool.apply_async(test_fun)
+    #     results.append(res)
+    # p_pool.close()
+    # p_pool.join()
+    # for result in results:
+    #     # print(result.get())
+    #     logger.info(result.get())
+    p_pool = Pool(processes=4)
+    p_pool.map_async(common_ssh, iter_datalist, 1)
     p_pool.close()
     p_pool.join()
-    for result in results:
-        # print(result.get())
-        logger.info(result.get())
 
 
 def main(sheet_name):
