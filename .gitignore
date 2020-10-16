@@ -7,3 +7,4 @@ __pycache__/
 .idea/
 Result.xlsx
 Python/GoFirewall/data/FirewalllPolicy.xlsx
+Python/Domain/data/Data1.xlsx
