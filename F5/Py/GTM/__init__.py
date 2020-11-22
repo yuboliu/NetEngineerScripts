@@ -8,10 +8,9 @@
 
 import sys
 import os
+
 sys.path.append(os.path.abspath("../"))
 import lib.ConfigSettings
 
-
 if __name__ == "__main__":
     pass
-
