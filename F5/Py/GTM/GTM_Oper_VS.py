@@ -13,7 +13,8 @@ import json
 import re
 import urllib3
 import argparse
-import ipaddr
+# import ipaddr
+import ipaddress
 urllib3.disable_warnings()
 
 
@@ -127,9 +128,10 @@ if __name__ == "__main__":
                             one_ip = i['name']
                             subs = ip[opt_gtm_id]
                             for sub in subs:
-                                new_net = ipaddr.IPNetwork(one_ip)
-                                old_net = ipaddr.IPNetwork(sub)
-                                r = new_net.overlaps(old_net)
+                                # new_net = ipaddr.IPNetwork(one_ip)
+                                # old_net = ipaddr.IPNetwork(sub)
+                                # r = new_net.overlaps(old_net)
+                                r = one_ip in ipaddress.ip_network(sub)
                                 if r:
                                     print(vs['name'])
                                     URI = "/mgmt/tm/gtm/pool/{}/{}/members/~Common~{}".format(record_type, pm, vs["name"])
