@@ -89,14 +89,16 @@ if __name__ == "__main__":
     parser.add_argument('-skip_sync', action='store_true', help="跳过同步配置", default=True)
     parser.add_argument('-skip_ipv6', action='store_true', help="跳过ipv6域名", default=False)
     parser.add_argument('-log_level', required=False, type=str, choices=['info', 'debug'], default='info')
+    parser.add_argument('-record_type', required=False, type=str, choices=['v4', 'v6', 'all'], default='all')
     args = parser.parse_args()
     opt_action = args.action
     opt_wideip = args.wideip
     opt_gtm_id = args.gtm_id
-    opt_force = args.force_usage_pri
+    opt_force_pri = args.force_usage_pri
     opt_skip_sync = args.skip_sync
     skip_v6 = args.skip_ipv6
     opt_log_level = args.log_level
+    opt_record_type = args.record_type
 
     logger = log(opt_log_level)
     logger.info("接收到的参数: {}".format(args))
@@ -106,16 +108,23 @@ if __name__ == "__main__":
     action = Disabled_JSON if opt_action == "deactive" else Enabled_JSON
     logger.info(action)
 
+    if args.record_type == 'v4':
+        record_types = ['a']
+    elif args.record_type == 'v6':
+        record_types = ['aaaa']
+    elif args.record_type == 'all':
+        record_types = ['a', 'aaaa']
+
     req_sess = requests.session()
     class_url = GenURL()
     for domain_name in domain_names:
-        record_types = ["a", "aaaa"]
+        # record_types = ["a", "aaaa"]
         for record_type in record_types:
             class_url.set_record_type(record_type)
             if skip_v6 and record_type == 'aaaa':
                 logger.info("当前域名 {} 不执行IPv6 操作".format(domain_name))
                 break
-            if opt_force or re.search('int-bjrcb', domain_name, flags=re.I):
+            if opt_force_pri or re.search('int-bjrcb', domain_name, flags=re.I):
                 GTMs = Pri_GTM
                 skip_ipv6 = True
                 need_sync = True
